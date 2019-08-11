@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t moyuanchen/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true moyuanchen/react-test npm test
+
+after_success:
+  - docker build -t moyuanchen/multi-client ./client
+  - docker build -t moyuanchen/multi-nginx ./nginx
+  - docker build -t moyuanchen/multi-server ./server
+  - docker build -t moyuanchen/multi-worker ./worker
+  # Log in docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take them to docker hub
+  - docker push moyuanchen/multi-client
+  - docker push moyuanchen/multi-nginx
+  - docker push moyuanchen/multi-server
+  - docker push moyuanchen/multi-worker
